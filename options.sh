@@ -17,19 +17,16 @@ USAGE_HEADER=
 declare -A OPT_DEFINITIONS
 OPT_DEFINITIONS=(
 	["help"]="-h,--help"
-	["verbose"]="-v+,--verbose:"
 )
 
 declare -A OPT_DESCRIPTIONS
 OPT_DESCRIPTIONS=(
 	["help"]="This help screen"
-	["verbose"]="Verbosity level (default: <default>)"
 )
 
 declare -A OPT_DEFAULTS
 OPT_DEFAULTS=(
 	["help"]="false"
-	["verbose"]="0"
 )
 
 declare -A OPT_VALUES
