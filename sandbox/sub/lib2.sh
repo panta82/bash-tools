@@ -1,5 +1,5 @@
 echo
-echo "inside lib.sh"
+echo "inside lib2.sh"
 echo
 
 echo "THIS SCRIPT: $0"
@@ -8,5 +8,3 @@ echo "SOURCE 0: ${BASH_SOURCE[0]}"
 echo "SOURCE 0 PATH: $(dirname ${BASH_SOURCE[0]})"
 echo "SOURCE 1: ${BASH_SOURCE[1]}"
 echo "SOURCE 2: ${BASH_SOURCE[2]}"
-
-source "$(dirname ${BASH_SOURCE[0]})/lib2.sh"

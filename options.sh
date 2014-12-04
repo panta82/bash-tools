@@ -1,8 +1,8 @@
-# Environment
+# Option management. Argument parsing. Option file parsing.
 
-_assert_partial_loaded "general"
-_assert_partial_loaded "output"
-_LOADED_PARTIAL_OPTIONS_=true
+[[ -z "${_TOOLS_DIR_}" ]] && echo "Base not loaded!" >&2 && exit 1
+
+$(_require "general" "output")
 
 # Global settings
 
@@ -13,7 +13,6 @@ _OPTIONS_FILE_NAME_SUFFIX_=".conf"
 # Global variables
 
 USAGE_HEADER=
-OPTIONS_FILE=false
 
 declare -A OPT_DEFINITIONS
 OPT_DEFINITIONS=(
@@ -41,21 +40,42 @@ declare -a OPT_UNPARSED
 # Call as a shorthand to define an option
 # First two arguments are mandatory
 #     define_option help "-h,--help" "Show help screen" false
+#
+# Option definitions:
+#
+#    1) --switch -s
+#       Simple switch. If found, value is set to true
+#
+#    2) --switch: -s:
+#       Note the colon. Next argument is parsed as value. Eg: --port 80
+#
+#    3) switch=
+#       Argument is split on the = character. Value is whatever is on the right side. Eg. port=80
+#
+#    4) -switch+
+#       Additive switch, value is the number of appearances. Eg -d+  ==> -ddd  ===> value: 3
+#
 _define_option() {
 	local key="$1"
 	local definition="$2"
 	OPT_DEFINITIONS[$key]=$definition
-	if [ ! -z "$3" ]; then
+	if [[ ! -z "$3" ]]; then
 		OPT_DESCRIPTIONS[$key]="$3"
 	fi
-	if [ ! -z "$4" ]; then
+	if [[ ! -z "$4" ]]; then
 		OPT_DEFAULTS[$key]="$4"
 	fi
+}
+define_option() {
+	_define_option "$@"
 }
 
 # Check if the user is root. If not, prints out a message and exits
 _assert_root() {
-	_is_root || FATAL "This script must be run as root"
+	_is_root || fatal "This script must be run as root"
+}
+assert_root() {
+	_assert_root "$@"
 }
 
 # Print usage with switches
@@ -81,16 +101,16 @@ _print_usage() {
 		def_parts=()
 		IFS=',' read -a defs <<< "${OPT_DEFINITIONS[$key]}"
 		for def in "${defs[@]}"; do
-			def_type="${def: -1}"
+			def_type="${def:((${#def}-1))}"
 			case $def_type in
 				:)
-					def_parts+=("${def:0:-1} ${key^^}")
+					def_parts+=("${def:0:((${#def}-1))} ${key^^}")
 					;;
 				=)
 					def_parts+=("${def}${key^^}")
 					;;
 				+)
-					def_parts+=("${def:0:-1}[${def:1:-1}+]")
+					def_parts+=("${def:0:((${#def}-1))}[${def:1:((${#def}-1))}+]")
 					;;
 				*)
 					def_parts+=("$def")
@@ -100,15 +120,15 @@ _print_usage() {
 		def_string="$(_join_to_string 'echo' ', ' "${def_parts[@]}")"
 		usage_line="$usage_line[$def_string]"
 		def_strings[$key]="$def_string"
-		if [ ${#def_string} -gt "$longest_def_string" ]; then
+		if [[ ${#def_string} -gt "$longest_def_string" ]]; then
 			longest_def_string=${#def_string}
 		fi
 	done
 	_stdout "$usage_line"
 
 	# Print provided header or default header set through a global variable
-	[ -z "$header" ] && header="$USAGE_HEADER"
-	if [ ! -z "$header" ]; then
+	[[ -z "$header" ]] && header="$USAGE_HEADER"
+	if [[ ! -z "$header" ]]; then
 		_stdout ""
 		_stdout "$header"
 	fi
@@ -122,18 +142,19 @@ _print_usage() {
 		_stdout "    $(printf "$switch_format" "${def_strings[$key]}")    ${description}"
 	done
 }
-
-# Overridable version
 print_usage() {
 	_print_usage "$@"
 }
 
 # A quick shortcut to print usage and exit if supplied -h argument
 _try_show_help_and_exit() {
-	if [ "${OPT_VALUES["help"]}" = true ]; then
+	if [[ "${OPT_VALUES["help"]}" = true ]]; then
 		print_usage
 		exit 0
 	fi
+}
+try_show_help_and_exit() {
+	_try_show_help_and_exit "$@"
 }
 
 # Load default options. Should be called once all the options have been loaded
@@ -143,6 +164,9 @@ _opts_from_defaults() {
 			OPT_VALUES[$key]="${OPT_DEFAULTS[$key]}"
 		fi
 	done
+}
+opts_from_defaults() {
+	_opts_from_defaults "$@"
 }
 
 # Parse arguments, which should be passed along
@@ -185,26 +209,26 @@ _opts_from_args() {
 
 		option_found=false
 		for def in "${!opt_reverse[@]}"; do
-			def_type="${def: -1}"
+			def_type="${def:((${#def}-1))}"
 			key=${opt_reverse["$def"]}
 			case $def_type in
 				:)
 					# Whitespace style --switch value, -s value
-					if [ "${def:0:-1}" = "$arg" ]; then
+					if [[ "${def:0:((${#def}-1))}" = "$arg" ]]; then
 						waiting_key="$key"
 						option_found=true
 					fi
 					;;
 				=)
 					# Equals style --switch=value, -s=value
-					if [ "$arg_key" = "${def:0:-1}" ]; then
+					if [[ "$arg_key" = "${def:0:((${#def}-1))}" ]]; then
 						OPT_VALUES[$key]="$arg_value"
 						option_found=true
 					fi
 					;;
 				+)
 					# Additive: -d, -dd, -ddd
-					plus_regex="^-(${def:1:-1}+)$"
+					plus_regex="^-(${def:1:((${#def}-1))}+)$"
 					if [[ $arg =~ $plus_regex ]]; then
 						plus_value="${BASH_REMATCH[1]}"
 						plus_value="${#plus_value}"
@@ -214,26 +238,28 @@ _opts_from_args() {
 					;;
 				*)
 					# Switches: -h, -y, --once
-					if [ "${def}" = "$arg" ]; then
+					if [[ "${def}" = "$arg" ]]; then
 						OPT_VALUES[$key]=true
 						option_found=true
 					fi
 					;;
 			esac
-			if [ "$option_found" = true ]; then
+			if [[ "$option_found" = true ]]; then
 				break
 			fi
 		done
 
-		if [ "$option_found" = false ]; then
+		if [[ "$option_found" = false ]]; then
 			OPT_UNPARSED+=($arg)
 		fi
 	done
 }
+opts_from_args() {
+	_opts_from_args "$@"
+}
 
 # Writes out options file path. For a program /home/jack/test.sh, path will be /home/jack/test.conf
 _options_file_get_path() {
-	_ensure_this_path
 	local options_file_name="$(basename "$0")"
 	options_file_name="${options_file_name%.*}${_OPTIONS_FILE_NAME_SUFFIX_}"
 	echo "$THIS_PATH/$options_file_name"
@@ -246,19 +272,10 @@ _opts_from_file() {
 	local options_file="$1"
 	local dynamic="$2"
 
-	if [ -z "$options_file" ] && [ "$OPTIONS_FILE" = false ]; then
-		# We don't want to load options file
-		return 0
-	fi
-
-	# Try to set options file from global value
-	[ -z "$options_file" ] && [ "$OPTIONS_FILE" != true ] && options_file="$OPTIONS_FILE"
-	
-	# Use default global file
+	# Use default global file, if file is not provided
 	[ -z "$options_file" ] && options_file="$(_options_file_get_path)"
 	
 	if [ ! -f "$options_file" ]; then
-		WARN "Options file $options_file not found"
 		return 1
 	fi
 
@@ -268,7 +285,7 @@ _opts_from_file() {
 			local key="${BASH_REMATCH[1]}"
 			local value="${BASH_REMATCH[2]}"
 			
-			if [ ! -z "${OPT_DEFINITIONS[$key]}" ] || [ "$dynamic" = "true" ]; then
+			if [[ ! -z "${OPT_DEFINITIONS[$key]}" || "$dynamic" = "true" ]]; then
 				OPT_VALUES[$key]="$value"
 			else
 				OPT_UNPARSED+=($key)
@@ -276,24 +293,27 @@ _opts_from_file() {
 		fi
 	done < "$options_file"
 }
+opts_from_file() {
+	_opts_from_file "$@"
+}
 
 # Standard loading sequence of setting up options from multiple sources
 # Should be given all command line arguments
-#     _opts_standard_sequence "$@"
-_opts_standard_sequence() {
-	_opts_from_defaults
+#     opts_standard_sequence "$@"
+opts_standard_sequence() {
+	opts_from_defaults
 
-	_opts_from_file
+	opts_from_file
 
 	if [ ${#OPT_UNPARSED[@]} -gt 0 ]; then
-		FATAL "Unsupported options in $(_options_file_get_path): $(_join_to_string echo ', ' "${OPT_UNPARSED[@]}"). Run with -h for more info."
+		fatal "Unsupported options in $(_options_file_get_path): $(_join_to_string echo ', ' "${OPT_UNPARSED[@]}"). Run with -h for more info."
 	fi
 
-	_opts_from_args "$@"
+	opts_from_args "$@"
 
-	_try_show_help_and_exit
+	try_show_help_and_exit
 
 	if [ ${#OPT_UNPARSED[@]} -gt 0 ]; then
-		FATAL "Unsupported command line arguments: $(_join_to_string echo ', ' "${OPT_UNPARSED[@]}"). Run with -h for more info."
+		fatal "Unsupported command line arguments: $(_join_to_string echo ', ' "${OPT_UNPARSED[@]}"). Run with -h for more info."
 	fi
 }

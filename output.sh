@@ -1,13 +1,10 @@
-# Environment
+# Output to stdout and stderr
 
-_assert_partial_loaded "general"
-_LOADED_PARTIAL_OUTPUT_=true
+[[ -z "${_TOOLS_DIR_}" ]] && echo "Base not loaded!" >&2 && exit 1
 
 # Global settings
 
 _DEFAULT_ERROR_SIGNAL_=1
-
-# Global variables
 
 # Output message to stdout. Optional suffix as second arg
 _stdout() {
@@ -24,7 +21,7 @@ _stdout() {
 	fi
 }
 
-# Output to std err
+# Output to stderr
 _stderr() {
 	_stdout "$1" "$2" 1>&2
 }
@@ -37,17 +34,17 @@ _exit_with_error() {
 }
 
 # Print INFO message
-INFO() {
+log() {
 	_stdout "$1" "INFO"
 }
 
 # Print WARNING message
-WARN() {
+warn() {
 	_stderr "$1" "WARNING"
 }
 
 # Print fatal error and exit with error code
-FATAL() {
+fatal() {
 	_stderr ""
 	_stderr "$1" "FATAL"
 	_exit_with_error "$2"
