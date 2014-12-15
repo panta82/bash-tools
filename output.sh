@@ -71,13 +71,25 @@ log() {
 # Print WARNING message, verbosity 2+
 warn() {
 	[[ $_VERBOSITY_LEVEL_ -lt 2 ]] && return
-	_stderr "$1" "WARNING" '\e[103m\e[90m'
+	_stderr "$1" "WARNING" '\e[103m\e[90m' '\e[93m'
 }
 
 # Print ERROR message, verbosity 1+
 error() {
 	[[ $_VERBOSITY_LEVEL_ -lt 1 ]] && return
 	_stderr "$1" "ERROR" '\e[41m' '\e[31m'
+}
+
+# Print DEBUG LVL 1 message, verbosity 4+
+dbg1() {
+	[[ $_VERBOSITY_LEVEL_ -lt 4 ]] && return
+	_stdout "$1" "DBG1" '\e[44m\e[37m'
+}
+
+# Print DEBUG LVL 2 message, verbosity 5+
+dbg2() {
+	[[ $_VERBOSITY_LEVEL_ -lt 5 ]] && return
+	_stdout "$1" "DBG2" '\e[100m' '\e[90m'
 }
 
 # Print fatal error and exit with error code, verbosity 1+

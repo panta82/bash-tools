@@ -32,7 +32,10 @@ error "You shouldn't see this"
 warn "You shouldn't see this"
 log "You shouldn't see this"
 
-_VERBOSITY_LEVEL_=5
+_VERBOSITY_LEVEL_=6
+
+dbg1 "Debugging 1"
+dbg2 "Debugging 2"
 
 log "Testing fatal..."
 fatal "Nothing bad happened, just a test"
