@@ -17,6 +17,26 @@ _TOOLS_DIR_="$(dirname ${BASH_SOURCE[0]})"
 
 declare -a _MODULE_SEARCH_PATHS_=("${_TOOLS_DIR_}" "${THIS_DIR}")
 
+# Utility function that resolves module name into a full path
+_resolve_module_name() {
+	local name="$1"
+	local path
+	for search_path in "${_MODULE_SEARCH_PATHS_[@]}"; do
+		path="$(readlink -f "${search_path}/$name")"
+		if [[ -f "$path" ]]; then
+			break
+		else
+			path="${path}${_MODULE_FILE_DEFAULT_EXTENSION_}"
+			if [[ -f "$path" ]]; then
+				break
+			else
+				path=""
+			fi
+		fi
+	done
+	echo "$path"
+}
+
 # Load one or multiple modules. Can take absolute paths, relative paths or just names (with or without extension).
 # By default, modules are searched within bash_tools and the application directory.
 # Modules are loaded only once. Due to scoping issues, the output of require() calls should be executed.
@@ -31,19 +51,7 @@ _require() {
 			[[ ! -f "$name" ]] && echo "FATAL! Couldn't find module $name" 1>&2 && exit 1
 			path="${name}"
 		else
-			for search_path in "${_MODULE_SEARCH_PATHS_[@]}"; do
-				path="$(readlink -f "${search_path}/$name")"
-				if [[ -f "$path" ]]; then
-					break
-				else
-					path="${path}${_MODULE_FILE_DEFAULT_EXTENSION_}"
-					if [[ -f "$path" ]]; then
-						break
-					else
-						path=""
-					fi
-				fi
-			done
+			path="$(_resolve_module_name "${name}")"
 			[[ ! -f "$path" ]] && echo "FATAL! Couldn't find module $name" 1>&2 && exit 1
 		fi
 

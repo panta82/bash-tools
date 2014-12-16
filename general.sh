@@ -35,3 +35,19 @@ _is_root() {
 is_root() {
 	_is_root "$@"
 }
+
+# Compile a list of modules into a single script. Suitable for creating a single portable file for distribution.
+_compile_tools() {
+	echo -e "\n#*** BASE ***\n"
+	cat "$(_resolve_module_name base)"
+
+	for name in "$@"; do
+		if [[ name != "base" ]]; then
+			echo -e "\n\n#*** ${name^^} ***\n"
+			cat "$(_resolve_module_name $name)"
+		fi
+	done
+}
+compile_tools() {
+	_compile_tools "$@"
+}
