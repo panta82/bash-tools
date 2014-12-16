@@ -8,8 +8,7 @@ _MODULE_FILE_DEFAULT_EXTENSION_=".sh"
 
 # Declare module globals
 
-declare -A _LOADED_MODULES_
-_LOADED_MODULES_=(
+declare -A _LOADED_MODULES_=(
 	["$(readlink -e "${BASH_SOURCE[0]}")"]=true
 )
 
@@ -49,9 +48,8 @@ _require() {
 		fi
 
 		[[ "${_LOADED_MODULES_["$path"]}" ]] && continue
-		
-		_LOADED_MODULES_["$path"]=true
-		echo eval "source '$path'" ";"
+
+		echo eval "source '$path' ; _LOADED_MODULES_['$path']=true ; "
 	done
 }
 require() {
