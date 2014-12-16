@@ -13,13 +13,13 @@
 	# Equalize all badges to this width. Clear to disable
 	_BADGE_WIDTH_=7
 
-	# If true, output is color-coded
+	# If true, output is colorized. Without this, color arguments are ignored
 	_COLORS_=true
 
 # Output message to stdout.
 #     msg: Message to print
 #     badge: Optional badge to add before msg
-#     badge_color: Style to use for badge, if COLORS is enabled. Otherwise, used [BADGE] style.
+#     badge_color: Style to use for badge, if COLORS is enabled. Otherwise, uses [BADGE] style.
 #     msg_color: Style to use for msg, if COLORS is enabled
 # Colors should be strings compiled from standard escape codes, see here: http://misc.flogisoft.com/bash/tip_colors_and_formatting
 _stdout() {
@@ -58,7 +58,7 @@ _stderr() {
 # Exit with _DEFAULT_ERROR_SIGNAL_ or provided signal
 _exit_with_error() {
 	local exit_signal="$1"
-	[ -z "$exit_signal" ] && exit_signal=${_DEFAULT_ERROR_SIGNAL_}
+	[[ -z "$exit_signal" ]] && exit_signal=${_DEFAULT_ERROR_SIGNAL_}
 	exit $exit_signal
 }
 

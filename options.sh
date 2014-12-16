@@ -157,7 +157,7 @@ try_show_help_and_exit() {
 # Load default options. Should be called once all the options have been loaded
 _opts_from_defaults() {
 	for key in "${!OPT_DEFAULTS[@]}"; do
-		if [ ! -z "${OPT_DEFAULTS[$key]}" ]; then
+		if [[ ! -z "${OPT_DEFAULTS[$key]}" ]]; then
 			OPT_VALUES[$key]="${OPT_DEFAULTS[$key]}"
 		fi
 	done
@@ -191,7 +191,7 @@ _opts_from_args() {
 	done
 
 	for arg in "$@"; do
-		if [ ! -z "$waiting_key" ]; then
+		if [[ ! -z "$waiting_key" ]]; then
 			OPT_VALUES[$waiting_key]="$arg"
 			waiting_key=
 			continue
@@ -270,9 +270,9 @@ _opts_from_file() {
 	local dynamic="$2"
 
 	# Use default global file, if file is not provided
-	[ -z "$options_file" ] && options_file="$(_options_file_get_path)"
+	[[ -z "$options_file" ]] && options_file="$(_options_file_get_path)"
 	
-	if [ ! -f "$options_file" ]; then
+	if [[ ! -f "$options_file" ]]; then
 		return 1
 	fi
 
@@ -302,7 +302,7 @@ opts_standard_sequence() {
 
 	opts_from_file
 
-	if [ ${#OPT_UNPARSED[@]} -gt 0 ]; then
+	if [[ ${#OPT_UNPARSED[@]} -gt 0 ]]; then
 		fatal "Unsupported options in $(_options_file_get_path): $(_join_to_string echo ', ' "${OPT_UNPARSED[@]}"). Run with -h for more info."
 	fi
 
@@ -310,7 +310,7 @@ opts_standard_sequence() {
 
 	try_show_help_and_exit
 
-	if [ ${#OPT_UNPARSED[@]} -gt 0 ]; then
+	if [[ ${#OPT_UNPARSED[@]} -gt 0 ]]; then
 		fatal "Unsupported command line arguments: $(_join_to_string echo ', ' "${OPT_UNPARSED[@]}"). Run with -h for more info."
 	fi
 }
