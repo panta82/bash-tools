@@ -50,7 +50,7 @@ _stdout() {
 		fi
 	fi
 
-	[[ ! -z "${_OUTPUT_PREFIX_}" ]] && msg="${_OUTPUT_PREFIX_} msg"
+	[[ ! -z "${_OUTPUT_PREFIX_}" ]] && msg="${_OUTPUT_PREFIX_} ${msg}"
 
 	echo -e "${badge} ${msg}"
 }
