@@ -16,6 +16,9 @@
 	# If true, output is colorized. Without this, color arguments are ignored
 	_COLORS_=true
 
+	# Prefix to add before each line of output.
+	_OUTPUT_PREFIX_=''
+
 # Output message to stdout.
 #     msg: Message to print
 #     badge: Optional badge to add before msg
@@ -46,6 +49,8 @@ _stdout() {
 			badge="[$badge]"
 		fi
 	fi
+
+	[[ ! -z "${_OUTPUT_PREFIX_}" ]] && msg="${_OUTPUT_PREFIX_} msg"
 
 	echo -e "${badge} ${msg}"
 }
