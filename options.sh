@@ -205,6 +205,7 @@ _opts_from_args() {
 		fi
 
 		option_found=false
+
 		for def in "${!opt_reverse[@]}"; do
 			def_type="${def:((${#def}-1))}"
 			key=${opt_reverse["$def"]}
@@ -241,12 +242,12 @@ _opts_from_args() {
 					fi
 					;;
 			esac
-			if [[ "$option_found" = true ]]; then
+			if $option_found; then
 				break
 			fi
 		done
 
-		if [[ "$option_found" = false ]]; then
+		if ! $option_found; then
 			OPT_UNPARSED+=($arg)
 		fi
 	done
